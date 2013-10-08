@@ -22,6 +22,17 @@ class ParametersTaintTest < ActiveSupport::TestCase
     end
   end
 
+  test "fetch doesnt modify original hash if there is a default" do
+    assert_nothing_raised do
+      assert_equal "monkey", @params.fetch(:foo, "monkey")
+      assert_nil @params[:foo]
+      assert_equal "monkey", @params.fetch(:foo) { "monkey" }
+      assert_nil @params[:foo]
+      assert_equal({ :bar => "monkey" }, @params.fetch(:foo, :bar => "monkey"))
+      assert_nil @params[:foo]
+    end
+  end
+
   test "not permitted is sticky on accessors" do
     assert !@params.slice(:person).permitted?
     assert !@params[:person][:name].permitted?

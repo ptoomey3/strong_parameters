@@ -29,7 +29,7 @@ module ActionController
   class Parameters < ActiveSupport::HashWithIndifferentAccess
     attr_accessor :permitted
     alias :permitted? :permitted
-    
+
     cattr_accessor :action_on_unpermitted_parameters, :instance_accessor => false
 
     # Never raise an UnpermittedParameters exception because of these params
@@ -79,7 +79,8 @@ module ActionController
     end
 
     def fetch(key, *args)
-      convert_hashes_to_parameters(key, super)
+      return self[key] if has_key?(key)
+      super
     rescue KeyError, IndexError
       raise ActionController::ParameterMissing.new(key)
     end
@@ -215,23 +216,23 @@ module ActionController
         object.is_a?(Hash) && object.all? { |k, v| k =~ /\A-?\d+\z/ && v.is_a?(Hash) }
       end
 
-      def unpermitted_parameters!(params)  
+      def unpermitted_parameters!(params)
         return unless self.class.action_on_unpermitted_parameters
-        
+
         unpermitted_keys = unpermitted_keys(params)
 
-        if unpermitted_keys.any?  
-          case self.class.action_on_unpermitted_parameters  
+        if unpermitted_keys.any?
+          case self.class.action_on_unpermitted_parameters
           when :log
             name = "unpermitted_parameters.action_controller"
             ActiveSupport::Notifications.instrument(name, :keys => unpermitted_keys)
-          when :raise  
-            raise ActionController::UnpermittedParameters.new(unpermitted_keys)  
-          end  
-        end  
-      end  
-  
-      def unpermitted_keys(params)  
+          when :raise
+            raise ActionController::UnpermittedParameters.new(unpermitted_keys)
+          end
+        end
+      end
+
+      def unpermitted_keys(params)
         self.keys - params.keys - NEVER_UNPERMITTED_PARAMS
       end
   end
